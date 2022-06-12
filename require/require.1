@@ -1,0 +1,101 @@
+.\" vi: tw=80
+.Dd $Mdocdate: June 12 2022 $
+.Dt REQUIRE 1
+.Os
+.Sh NAME
+.Nm require
+.Nd assert that programs or environment variables exist
+.Sh SYNOPSIS
+.Nm
+.Op Ar prog...
+.Op Ar - Op Ar envvar...
+.Sh DESCRIPTION
+.Nm
+is a script that allows you to assert that a specific program is installed
+and/or a specific environment variable is set.
+The
+.Ic command
+utility with the
+.Fl v
+flag is used to check for the existance of a given program, and the
+.Ic set
+utility is used to check if a given environment variable is set.
+If a program is not installed or an environment variable is not set, the
+.Nm
+utility will write an informative error message to the standard error and exit
+with an exit code of 1.
+This allows the callee program or script to detect if a requirement is not
+satisfied by checking the exit status of
+.Nm .
+.Pp
+When used in shell scripts, it is recommended to call the
+.Ic set
+utility with the
+.Fl e
+flag to automatically terminate the script if a requirement is missing.
+Examples can be found in the
+.Sx EXAMPLES
+section.
+.Pp
+To check if any given programs are installed on the host system, you must simply
+invoke
+.Nm
+with the program names as command line arguments.
+If you would like to check if any environment variables are set, simply provide
+a dash
+.Pq Sq -
+as a command line argument, and then all the following arguments will be
+interpreted as environment variables instead of programs.
+.Sh EXIT STATUS
+.Ex -std
+.Sh EXAMPLES
+Ensure that the
+.Ic curl
+utility is installed and that the environment variables
+.Ev EDITOR
+and
+.Ev XDG_CONFIG_HOME
+are set:
+.Pp
+.Dl $ require curl - EDITOR XDG_CONFIG_HOME
+.Pp
+Check if a scripts non-standard dependencies are installed and exit the program
+otherwise:
+.Bd -literal -offset indent
+#!/bin/sh
+
+set -e
+require curl pass
+
+token=`pass show api_key`
+curl -X POST -H "Authorization: $token" -F "data=@${1:-/dev/stdin}" \e
+	https://paste.thomasvoss.com
+.Ed
+.Sh DIAGNOSTICS
+.Bl -diag
+.It warning, program not installed
+Indicates that a program listed as a requirement is not installed on the host
+system.
+For example, if the program
+.Ic curl
+is listed as a requirement but is not installed, the following diagnostic will
+be printed to the standard error:
+.Bd -literal -offset indent
+require: program 'curl' not installed
+.Ed
+.It warning, environment variable not installed
+Indicates that an environment variable listed as a requirement is not set on the
+host system.
+For example, if the environment variable
+.Ev XDG_CONFIG_HOME
+is listed as a requirement but is not set, the following diagnostic will be
+printed to the standard error:
+.Bd -literal -offset indent
+require: environment variable 'XDG_CONFIG_HOME' not set
+.Ed
+.El
+.Sh SEE ALSO
+.Xr command 1 ,
+.Xr set 1
+.Sh AUTHORS
+.An Thomas Voss Aq Mt thomasvoss@live.com
